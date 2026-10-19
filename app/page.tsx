@@ -27,10 +27,25 @@ interface StudentRecord {
   marks: { [subjectId: string]: SubjectMarks };
   patrak_b_sem1: number;
   patrak_b_sem2: number;
+  patrak_b_statements_sem1?: number[];
+  patrak_b_statements_sem2?: number[];
 }
 
 export default function HomePage() {
   const standards = ['ધોરણ ૩', 'ધોરણ ૪', 'ધોરણ ૫', 'ધોરણ ૬', 'ધોરણ ૭', 'ધોરણ ૮'];
+
+  const patrakBStatements = [
+    'શાળામાં નિયમિત આવે છે.', 'પ્રાર્થના સંમેલનમાં નિયમિત સામેલ થાય છે.', 'શાળાની સ્વચ્છતા જાળવે છે.', 'બીજા વિદ્યાર્થીઓને મદદરૂપ થાય છે.',
+    'સોંપેલું કાર્ય સારી રીતે કરે છે.', 'કોઈપણ કાર્ય કરવામાં તત્પરતા દાખવે છે.', 'દરેક કાર્યમાં સમયનું પાલન કરે છે.', 'નવીન બાબત ઉત્સાહ પૂર્વક શીખે છે.',
+    'શિક્ષક પ્રત્યે હકારાત્મક વલણ ધરાવે છે.', 'શાળા મિલકતની જાળવણી રાખે છે.', 'વ્યક્તિગત પ્રત્યે સહયોગ દાખવે છે.', 'વ્યક્તિત્વ સ્વચ્છતા અને સુઘડતા જાળવે છે.',
+    'પર્યાવરણની સમતુલા જાળવવામાં ઉપયોગી થાય છે.', 'શિક્ષકનો આદર જાળવે છે.', 'ઇતર વાંચન', 'ભાષાશુદ્ધિ સાથેનું મરોડદાર અક્ષર લેખન',
+    'મૌલિક વાર્તા / કથન / વક્તવ્ય', 'સર્જનાત્મક લેખન', 'ગાન / વાદન (અભિનય, બાળગીત વગેરે)', 'નાટ્ય/નૃત્ય/વેશભૂષા/અભિનય',
+    'ચિત્રમાં રેખાંકન સ્પષ્ટ અને સુંદર કરે છે.', 'ચિત્રમાં રંગપૂરણી સારી રીતે કરે છે.', 'ચિત્રકલા(ચિત્રપોથી)', 'યોગિક ક્રિયાઓ ઉત્સાહપૂર્વક કરે છે.',
+    'સરળ આસનો ઉત્સાહપૂર્વક કરે છે.', 'સાંઘિક રમતો કૌશલ્યપૂર્વક રમે છે.', 'ખેલકૂદ અને જિમનાસ્ટિક ગતિમાન અને લવચીક કરે છે.', 'વ્યાયામ (સમૂહ કવાયત અને અન્ય)',
+    'ઉત્સવ ઉજવણી', 'વિશેષ દિન ઉજવણી', 'વિશેષ કૌશલ્યની અભિવ્યક્તિ', 'પ્રદર્શનો(ક્વિઝ) માં ભાગીદારી',
+    'મૂલ્યાંકન ની પ્રવૃત્તિઓમાં ભાગીદારી', 'વિવિધ સ્પર્ધાઓ', 'હસ્ત લેખિત અંકો બનાવવા અને તેના પ્રદર્શન માં', 'ઇકોક્લબ ની પ્રવૃતિ',
+    'પ્રવાસ પર્બટન / મુલાકાત', 'માટીકામ/બાગકામ/શાળા સુશોભન', 'કાગળકામ/ટી.એલ.એમ. નિર્માણમાં સહયોગ', 'નિયમિતતા.કાર્યક્ષમતા.સુટેવ અને સહકાર'
+  ];
 
   const [schoolName, setSchoolName] = useState('પાલજ પ્રાથમિક શાળા');
   const [talukaDist, setTalukaDist] = useState('તા-જી-મહેસાણા');
@@ -45,41 +60,29 @@ export default function HomePage() {
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
 
-  // Print Mode State ('patrak_c' | 'slips' | null)
   const [printMode, setPrintMode] = useState<'patrak_c' | 'slips' | null>(null);
-
-  // 10 Questions Slip State
   const [questionMarks, setQuestionMarks] = useState<number[]>(Array(10).fill(0));
 
   const isUpperStd = ['ધોરણ ૬', 'ધોરણ ૭', 'ધોરણ ૮'].includes(selectedStd);
+  const maxPerStatement = isUpperStd ? 10 : 5;
 
-  // Varshik Patrak-F Modal State
+  const [patrakBStatementsSem1, setPatrakBStatementsSem1] = useState<number[]>(Array(40).fill(0));
+  const [patrakBStatementsSem2, setPatrakBStatementsSem2] = useState<number[]>(Array(40).fill(0));
+
   const [printPatrakF, setPrintPatrakF] = useState<StudentRecord | null>(null);
 
-  // Saved Students List
   const [savedStudents, setSavedStudents] = useState<StudentRecord[]>(() => {
     if (typeof window !== 'undefined') {
       const data = localStorage.getItem('school_students_patrak_c');
       if (data) {
-        try {
-          return JSON.parse(data);
-        } catch (e) {
-          console.error('Error loading local storage:', e);
-        }
+        try { return JSON.parse(data); } catch (e) { console.error('Error loading:', e); }
       }
     }
     return [];
   });
 
   const [studentInfo, setStudentInfo] = useState({
-    roll_no: '',
-    name: '',
-    gr_no: '',
-    birthdate: '',
-    gender: 'કુમાર',
-    caste: 'સામાન્ય',
-    attendance_sem1: '0',
-    attendance_sem2: '0',
+    roll_no: '', name: '', gr_no: '', birthdate: '', gender: 'કુમાર', caste: 'સામાન્ય', attendance_sem1: '0', attendance_sem2: '0',
   });
 
   const [marks, setMarks] = useState<{ [key: string]: SubjectMarks }>({});
@@ -104,7 +107,6 @@ export default function HomePage() {
 
   const handleRollNoChange = (rNo: string) => {
     setStudentInfo((prev) => ({ ...prev, roll_no: rNo }));
-
     if (!rNo) return;
 
     const existing = savedStudents.find(
@@ -126,52 +128,41 @@ export default function HomePage() {
       setMarks(existing.marks || {});
       setPatrakBSem1(existing.patrak_b_sem1 ?? (isUpperStd ? 400 : 200));
       setPatrakBSem2(existing.patrak_b_sem2 ?? (isUpperStd ? 400 : 200));
+      setPatrakBStatementsSem1(existing.patrak_b_statements_sem1 || Array(40).fill(0));
+      setPatrakBStatementsSem2(existing.patrak_b_statements_sem2 || Array(40).fill(0));
       setMessage(`ℹ️ રોલ નંબર ${rNo} નો જૂનો ડેટા મળી ગયો છે.`);
     } else {
-      if (editingStudentId) {
-        setEditingStudentId(null);
-      }
+      if (editingStudentId) setEditingStudentId(null);
+    }
+  };
+
+  const handleStatementMarkChange = (index: number, val: number) => {
+    const clampedVal = Math.min(maxPerStatement, Math.max(0, val));
+    if (selectedSem === 'sem1') {
+      const updated = [...patrakBStatementsSem1];
+      updated[index] = clampedVal;
+      setPatrakBStatementsSem1(updated);
+      const sum = updated.reduce((a, b) => a + b, 0);
+      setPatrakBSem1(sum);
+    } else {
+      const updated = [...patrakBStatementsSem2];
+      updated[index] = clampedVal;
+      setPatrakBStatementsSem2(updated);
+      const sum = updated.reduce((a, b) => a + b, 0);
+      setPatrakBSem2(sum);
     }
   };
 
   const getSubjectsForStd = (std: string, semester?: 'sem1' | 'sem2' | 'all') => {
-    if (std === 'ધોરણ ૩') {
-      return [
-        { id: 'gujarati', name: 'ગુજરાતી' },
-        { id: 'ganit', name: 'ગણિત' },
-        { id: 'paryavaran', name: 'પર્યાવરણ' },
-        { id: 'angreji', name: 'અંગ્રેજી' },
-      ];
-    }
+    if (std === 'ધોરણ ૩') return [{ id: 'gujarati', name: 'ગુજરાતી' }, { id: 'ganit', name: 'ગણિત' }, { id: 'paryavaran', name: 'પર્યાવરણ' }, { id: 'angreji', name: 'અંગ્રેજી' }];
     if (std === 'ધોરણ ૪') {
-      const base = [
-        { id: 'gujarati', name: 'ગુજરાતી' },
-        { id: 'ganit', name: 'ગણિત' },
-        { id: 'paryavaran', name: 'પર્યાવરણ' },
-        { id: 'angreji', name: 'અંગ્રેજી' },
-      ];
+      const base = [{ id: 'gujarati', name: 'ગુજરાતી' }, { id: 'ganit', name: 'ગણિત' }, { id: 'paryavaran', name: 'પર્યાવરણ' }, { id: 'angreji', name: 'અંગ્રેજી' }];
       if (semester === 'sem1') return base;
       base.push({ id: 'hindi', name: 'હિન્દી' });
       return base;
     }
-    if (std === 'ધોરણ ૫') {
-      return [
-        { id: 'gujarati', name: 'ગુજરાતી' },
-        { id: 'ganit', name: 'ગણિત' },
-        { id: 'paryavaran', name: 'પર્યાવરણ' },
-        { id: 'angreji', name: 'અંગ્રેજી' },
-        { id: 'hindi', name: 'હિન્દી' },
-      ];
-    }
-    return [
-      { id: 'gujarati', name: 'ગુજરાતી' },
-      { id: 'ganit', name: 'ગણિત' },
-      { id: 'vigyan', name: 'વિજ્ઞાન' },
-      { id: 'samajik_vigyan', name: 'સામાજિક વિજ્ઞાન' },
-      { id: 'hindi', name: 'હિન્દી' },
-      { id: 'angreji', name: 'અંગ્રેજી' },
-      { id: 'sanskrut', name: 'સંસ્કૃત' },
-    ];
+    if (std === 'ધોરણ ૫') return [{ id: 'gujarati', name: 'ગુજરાતી' }, { id: 'ganit', name: 'ગણિત' }, { id: 'paryavaran', name: 'પર્યાવરણ' }, { id: 'angreji', name: 'અંગ્રેજી' }, { id: 'hindi', name: 'હિન્દી' }];
+    return [{ id: 'gujarati', name: 'ગુજરાતી' }, { id: 'ganit', name: 'ગણિત' }, { id: 'vigyan', name: 'વિજ્ઞાન' }, { id: 'samajik_vigyan', name: 'સામાજિક વિજ્ઞાન' }, { id: 'hindi', name: 'હિન્દી' }, { id: 'angreji', name: 'અંગ્રેજી' }, { id: 'sanskrut', name: 'સંસ્કૃત' }];
   };
 
   const allPossibleSubjects = getSubjectsForStd(selectedStd, 'all');
@@ -232,36 +223,18 @@ export default function HomePage() {
     const percentage = grandMax > 0 ? ((grandObtained / grandMax) * 100).toFixed(2) : '0';
     const grade = calculateGrade(grandObtained, grandMax);
 
-    return { 
-      sem1Sum, 
-      sem2Sum, 
-      patrakBSem1Val, 
-      patrakBSem2Val, 
-      maxPatrakBSem1,
-      maxPatrakBSem2,
-      grandObtained, 
-      grandMax, 
-      percentage, 
-      grade 
-    };
+    return { sem1Sum, sem2Sum, patrakBSem1Val, patrakBSem2Val, maxPatrakBSem1, maxPatrakBSem2, grandObtained, grandMax, percentage, grade };
   };
 
   const resetForm = () => {
     setEditingStudentId(null);
-    setStudentInfo({
-      roll_no: '',
-      name: '',
-      gr_no: '',
-      birthdate: '',
-      gender: 'કુમાર',
-      caste: 'સામાન્ય',
-      attendance_sem1: '0',
-      attendance_sem2: '0',
-    });
+    setStudentInfo({ roll_no: '', name: '', gr_no: '', birthdate: '', gender: 'કુમાર', caste: 'સામાન્ય', attendance_sem1: '0', attendance_sem2: '0' });
     setMarks({});
     const defaultVal = isUpperStd ? 400 : 200;
     setPatrakBSem1(defaultVal);
     setPatrakBSem2(defaultVal);
+    setPatrakBStatementsSem1(Array(40).fill(0));
+    setPatrakBStatementsSem2(Array(40).fill(0));
     setQuestionMarks(Array(10).fill(0));
     setMessage('');
   };
@@ -282,6 +255,8 @@ export default function HomePage() {
     setMarks(st.marks || {});
     setPatrakBSem1(st.patrak_b_sem1 ?? (isUpper ? 400 : 200));
     setPatrakBSem2(st.patrak_b_sem2 ?? (isUpper ? 400 : 200));
+    setPatrakBStatementsSem1(st.patrak_b_statements_sem1 || Array(40).fill(0));
+    setPatrakBStatementsSem2(st.patrak_b_statements_sem2 || Array(40).fill(0));
     setMessage(`✏️ વિદ્યાર્થી ${st.name} નો ડેટા ફોર્મમાં આવી ગયો છે.`);
     window.scrollTo({ top: 300, behavior: 'smooth' });
   };
@@ -323,7 +298,6 @@ export default function HomePage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     const rollNo = parseInt(studentInfo.roll_no);
     
     const existingIndex = savedStudents.findIndex(
@@ -331,14 +305,10 @@ export default function HomePage() {
     );
 
     let updatedMarks = { ...marks };
-
     if (existingIndex !== -1) {
       const oldMarks = savedStudents[existingIndex].marks || {};
       Object.keys(marks).forEach((subId) => {
-        updatedMarks[subId] = {
-          ...oldMarks[subId],
-          ...marks[subId],
-        };
+        updatedMarks[subId] = { ...oldMarks[subId], ...marks[subId] };
       });
     }
 
@@ -359,6 +329,8 @@ export default function HomePage() {
       marks: updatedMarks,
       patrak_b_sem1: Number(patrakBSem1),
       patrak_b_sem2: Number(patrakBSem2),
+      patrak_b_statements_sem1: patrakBStatementsSem1,
+      patrak_b_statements_sem2: patrakBStatementsSem2,
     };
 
     let updatedList: StudentRecord[];
@@ -376,30 +348,9 @@ export default function HomePage() {
     resetForm();
   };
 
-  // Filter and Sort in ASCENDING Order (Roll No 1, 2, 3...)
   const filteredStudents = savedStudents
     .filter((st) => st.standard === selectedStd)
     .sort((a, b) => a.roll_no - b.roll_no);
-
-  const exportToCSV = () => {
-    if (filteredStudents.length === 0) return alert('કોઈ ડેટા ઉપલબ્ધ નથી!');
-    let csv = `ક્રમ,વિદ્યાર્થીનું નામ,G.R. નં,ધોરણ,પ્રથમ સત્ર ગુણ,દ્વિતીય સત્ર ગુણ,કુલ ગુણ,ટકા (%),આખરી ગ્રેડ\n`;
-    filteredStudents.forEach((st) => {
-      const overall = calculateOverallGrandTotal(st);
-      csv += `"${st.roll_no}","${st.name}","${st.gr_no}","${st.standard}","${overall.sem1Sum + overall.patrakBSem1Val}","${overall.sem2Sum + overall.patrakBSem2Val}","${overall.grandObtained} / ${overall.grandMax}","${overall.percentage}%","${overall.grade}"\n`;
-    });
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `Patrak_C_${selectedStd}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const slipTotalSum = questionMarks.reduce((a, b) => a + b, 0);
 
   const getExamTitleText = () => {
     const semText = selectedSem === 'sem1' ? 'પ્રથમ સત્ર' : 'દ્વિતીય સત્ર';
@@ -410,22 +361,17 @@ export default function HomePage() {
     return `${semText} - ${examText}`;
   };
 
-  // Dedicated Print Handlers
   const handlePrintSlips = () => {
     setPrintMode('slips');
-    setTimeout(() => {
-      window.print();
-      setPrintMode(null);
-    }, 100);
+    setTimeout(() => { window.print(); setPrintMode(null); }, 100);
   };
 
   const handlePrintPatrakC = () => {
     setPrintMode('patrak_c');
-    setTimeout(() => {
-      window.print();
-      setPrintMode(null);
-    }, 100);
+    setTimeout(() => { window.print(); setPrintMode(null); }, 100);
   };
+
+  const slipTotalSum = questionMarks.reduce((a, b) => a + b, 0);
 
   return (
     <div className="p-4 md:p-8 bg-slate-100 min-h-screen text-slate-800 font-sans">
@@ -436,14 +382,9 @@ export default function HomePage() {
             <h1 className="text-3xl font-extrabold tracking-wide">{schoolName} ડેશબોર્ડ</h1>
             <p className="text-indigo-200 text-sm mt-1">📍 {talukaDist} | 🗓️ વર્ષ: {academicYear}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsEditingSchool(!isEditingSchool)}
-              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-xs font-bold border border-white/30 backdrop-blur"
-            >
-              ✏️ શાળા વિગત
-            </button>
-          </div>
+          <button onClick={() => setIsEditingSchool(!isEditingSchool)} className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-xl text-xs font-bold border border-white/30 backdrop-blur">
+            ✏️ શાળા વિગત
+          </button>
         </div>
 
         {isEditingSchool && (
@@ -459,24 +400,14 @@ export default function HomePage() {
       <section className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-5 rounded-3xl border border-slate-200 shadow-sm print:hidden">
         <div>
           <label className="text-xs font-bold text-slate-600 mb-1.5 block">1️⃣ ધોરણ પસંદ કરો:</label>
-          <select
-            value={selectedStd}
-            onChange={(e) => handleStandardChange(e.target.value)}
-            className="w-full p-3 bg-indigo-50 border border-indigo-200 rounded-2xl font-bold text-indigo-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            {standards.map((std) => (
-              <option key={std} value={std}>{std}</option>
-            ))}
+          <select value={selectedStd} onChange={(e) => handleStandardChange(e.target.value)} className="w-full p-3 bg-indigo-50 border rounded-2xl font-bold text-indigo-900">
+            {standards.map((std) => (<option key={std} value={std}>{std}</option>))}
           </select>
         </div>
 
         <div>
           <label className="text-xs font-bold text-slate-600 mb-1.5 block">2️⃣ સત્ર પસંદ કરો:</label>
-          <select
-            value={selectedSem}
-            onChange={(e) => setSelectedSem(e.target.value as 'sem1' | 'sem2')}
-            className="w-full p-3 bg-purple-50 border border-purple-200 rounded-2xl font-bold text-purple-900 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          >
+          <select value={selectedSem} onChange={(e) => setSelectedSem(e.target.value as 'sem1' | 'sem2')} className="w-full p-3 bg-purple-50 border rounded-2xl font-bold text-purple-900">
             <option value="sem1">પ્રથમ સત્ર (Sem-1)</option>
             <option value="sem2">દ્વિતીય સત્ર (Sem-2)</option>
           </select>
@@ -484,11 +415,7 @@ export default function HomePage() {
 
         <div>
           <label className="text-xs font-bold text-slate-600 mb-1.5 block">3️⃣ પરીક્ષા / મૂલ્યાંકનનો પ્રકાર:</label>
-          <select
-            value={selectedExamType}
-            onChange={(e) => setSelectedExamType(e.target.value)}
-            className="w-full p-3 bg-amber-50 border border-amber-200 rounded-2xl font-bold text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-          >
+          <select value={selectedExamType} onChange={(e) => setSelectedExamType(e.target.value)} className="w-full p-3 bg-amber-50 border rounded-2xl font-bold text-amber-900">
             {selectedSem === 'sem1' ? (
               <>
                 <option value="tri">પ્રથમ-ત્રિમાસિક (ત્રિ-40)</option>
@@ -517,9 +444,7 @@ export default function HomePage() {
               📝 {editingStudentId ? 'વિદ્યાર્થી ગુણ અપડેટ કરો' : `નવી એન્ટ્રી (${selectedStd} - ${selectedSem === 'sem1' ? 'પ્રથમ સત્ર' : 'દ્વિતીય સત્ર'})`}
             </h2>
             {editingStudentId && (
-              <button onClick={resetForm} className="text-xs text-red-500 font-bold bg-red-50 px-2.5 py-1 rounded-xl border border-red-200">
-                કેન્સલ
-              </button>
+              <button onClick={resetForm} className="text-xs text-red-500 font-bold bg-red-50 px-2.5 py-1 rounded-xl border border-red-200">કેન્સલ</button>
             )}
           </div>
 
@@ -527,14 +452,7 @@ export default function HomePage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 mb-1">રોલ નંબર (ઓટો-ફિલ)</label>
-                <input 
-                  type="number" 
-                  required 
-                  placeholder="દા.ત. 1" 
-                  value={studentInfo.roll_no} 
-                  onChange={(e) => handleRollNoChange(e.target.value)} 
-                  className="w-full p-2.5 bg-indigo-50/50 border border-indigo-200 rounded-xl text-sm font-bold text-indigo-900 focus:ring-2 focus:ring-indigo-500" 
-                />
+                <input type="number" required placeholder="દા.ત. 1" value={studentInfo.roll_no} onChange={(e) => handleRollNoChange(e.target.value)} className="w-full p-2.5 bg-indigo-50/50 border rounded-xl text-sm font-bold text-indigo-900" />
               </div>
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 mb-1">G.R. નંબર</label>
@@ -562,22 +480,40 @@ export default function HomePage() {
             </div>
 
             {selectedExamType === 'vyaktitva' ? (
-              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200">
-                <h3 className="font-bold text-xs text-amber-900 mb-2">
-                  વ્યક્તિત્વ વિકાસ ({selectedSem === 'sem1' ? 'પ્રથમ સત્ર' : 'દ્વિતીય સત્ર'}):
-                </h3>
-                <div className="flex items-center gap-3">
-                  <input 
-                    type="number" 
-                    min="0" 
-                    max={currentMaxInput} 
-                    value={selectedSem === 'sem1' ? patrakBSem1 : patrakBSem2} 
-                    onChange={(e) => selectedSem === 'sem1' ? setPatrakBSem1(Number(e.target.value)) : setPatrakBSem2(Number(e.target.value))} 
-                    className="w-full p-3 border rounded-xl font-bold text-amber-900 bg-white text-base text-center" 
-                  />
-                  <span className="text-xs font-bold text-amber-800 whitespace-nowrap">
-                    ગણતરી (1/2): {getCalculatedPatrakB(selectedSem === 'sem1' ? patrakBSem1 : patrakBSem2)} / {isUpperStd ? 200 : 100}
-                  </span>
+              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 space-y-3">
+                <div className="flex justify-between items-center border-b border-amber-200 pb-2">
+                  <h3 className="font-extrabold text-xs text-amber-950">
+                    📋 પત્રક-B (વ્યક્તિત્વ વિકાસ - 40 ક્ષમતાઓ)
+                  </h3>
+                  <div className="text-xs font-bold text-amber-900 bg-white px-2.5 py-1 rounded-lg border">
+                    કુલ: <span className="text-amber-700 font-extrabold">{selectedSem === 'sem1' ? patrakBSem1 : patrakBSem2}</span> / {currentMaxInput}
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-amber-800">
+                  દરેક ક્ષમતામાં {selectedStd} માટે <strong>0 થી {maxPerStatement} ગુણ</strong> ઉમેરો:
+                </p>
+
+                <div className="max-h-[250px] overflow-y-auto border rounded-xl bg-white p-2 space-y-1.5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {patrakBStatements.map((statementText, stIdx) => {
+                      const currentVal = selectedSem === 'sem1' ? patrakBStatementsSem1[stIdx] : patrakBStatementsSem2[stIdx];
+                      return (
+                        <div key={stIdx} className="p-1.5 border rounded-lg bg-slate-50 flex items-center justify-between text-xs gap-1">
+                          <span className="font-bold text-slate-600 w-5">{stIdx + 1}.</span>
+                          <span className="text-[10px] leading-tight font-medium text-slate-800 flex-1">{statementText}</span>
+                          <input 
+                            type="number" 
+                            min="0" 
+                            max={maxPerStatement}
+                            value={currentVal || 0}
+                            onChange={(e) => handleStatementMarkChange(stIdx, Number(e.target.value))}
+                            className="w-11 p-1 border rounded text-center font-bold bg-white text-indigo-900 text-xs"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             ) : (
@@ -602,7 +538,7 @@ export default function HomePage() {
                             min="0"
                             value={subMarks[fieldKey]} 
                             onChange={(e) => handleMarkChange(sub.id, fieldKey, Number(e.target.value))}
-                            className="w-20 p-2 border rounded-xl text-center font-bold bg-white text-indigo-900 focus:ring-2 focus:ring-indigo-500" 
+                            className="w-20 p-2 border rounded-xl text-center font-bold bg-white text-indigo-900" 
                           />
                         )}
                       </div>
@@ -641,7 +577,7 @@ export default function HomePage() {
                 <select
                   value={selectedSubjectForSlip}
                   onChange={(e) => setSelectedSubjectForSlip(e.target.value)}
-                  className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl font-bold text-indigo-900 text-xs focus:ring-2 focus:ring-indigo-500"
+                  className="w-full p-2.5 bg-white border border-indigo-200 rounded-xl font-bold text-indigo-900 text-xs"
                 >
                   {allPossibleSubjects.map((s) => (
                     <option key={s.id} value={s.id}>{s.name}</option>
@@ -659,7 +595,7 @@ export default function HomePage() {
                     min="0"
                     value={qMark}
                     onChange={(e) => handleQuestionMarkChange(idx, Number(e.target.value))}
-                    className="w-14 p-1 border rounded-lg text-center font-bold text-indigo-900 bg-indigo-50/50 focus:ring-2 focus:ring-indigo-500 text-xs"
+                    className="w-14 p-1 border rounded-lg text-center font-bold text-indigo-900 bg-indigo-50/50 text-xs"
                   />
                 </div>
               ))}
@@ -683,63 +619,6 @@ export default function HomePage() {
 
       {message && <p className="mb-4 p-3 bg-indigo-100 text-indigo-900 rounded-2xl font-bold text-center print:hidden">{message}</p>}
 
-      {/* Saved Records Collection */}
-      <section className="mb-8 print:hidden">
-        <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200">
-          <h3 className="text-md font-bold text-slate-700 mb-3">
-            Saved Marks Records - Collection: <span className="text-indigo-600 font-extrabold">{selectedStd}</span>
-          </h3>
-
-          {filteredStudents.length === 0 ? (
-            <div className="p-8 text-center text-slate-400 text-sm bg-slate-50 rounded-2xl border border-dashed">
-              આ ધોરણમાં હજી સુધી કોઈ વિદ્યાર્થી સેવ કરેલ નથી.
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-[300px] overflow-y-auto">
-              {filteredStudents.map((st) => {
-                const overall = calculateOverallGrandTotal(st);
-                return (
-                  <div key={st.id} className="p-3 bg-slate-50 hover:bg-indigo-50/50 rounded-2xl border border-slate-200 flex justify-between items-center transition">
-                    <div>
-                      <div className="font-bold text-xs text-slate-800">
-                        {st.roll_no}. {st.name} <span className="text-[10px] text-slate-400">({st.gr_no})</span>
-                      </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">
-                        કુલ: <span className="font-bold text-indigo-700">{overall.grandObtained} / {overall.grandMax}</span> | ગ્રેડ: <span className="font-bold text-purple-700">{overall.grade}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-1">
-                      <button 
-                        onClick={() => setPrintPatrakF(st)} 
-                        title="પત્રક-F જુઓ"
-                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold shadow-sm"
-                      >
-                        📄 પત્રક-F
-                      </button>
-                      <button 
-                        onClick={() => handleEditStudent(st)} 
-                        title="સુધારો કરો (Edit)"
-                        className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-bold shadow-sm"
-                      >
-                        ✏️ Edit
-                      </button>
-                      <button 
-                        onClick={() => deleteStudent(st.id)} 
-                        title="ડીલીટ કરો (Delete)"
-                        className="px-2.5 py-1 bg-red-500 hover:bg-red-600 text-white rounded-xl text-[10px] font-bold shadow-sm"
-                      >
-                        🗑️ Delete
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </section>
-
       {/* Complete Patrak-C Table */}
       <section className={`bg-white p-6 rounded-3xl shadow-sm border border-slate-200 ${printMode === 'slips' ? 'hidden print:hidden' : ''}`}>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4 print:hidden">
@@ -748,9 +627,6 @@ export default function HomePage() {
             <p className="text-xs text-slate-400 mt-0.5">સંપૂર્ણ પરિણામ પત્રક (Sem-1, Sem-2, પત્રક-B અને વાર્ષિક પરિણામ)</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={exportToCSV} className="px-4 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl shadow">
-              📥 Excel/CSV ડાઉનલોડ
-            </button>
             <button onClick={handlePrintPatrakC} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow">
               🖨️ પત્રક-C પ્રિન્ટ કરો
             </button>
@@ -765,13 +641,13 @@ export default function HomePage() {
               <thead>
                 <tr className="bg-indigo-900 text-white font-bold">
                   <th rowSpan={3} className="border p-2">ક્રમ</th>
-                  <th rowSpan={3} className="border p-2 min-w-[140px]">વિદ્યાર્થીનું નામ</th>
+                  <th rowSpan={3} className="border p-2 min-w-[150px]">વિદ્યાર્થીનું નામ</th>
                   <th rowSpan={3} className="border p-2">G.R. નં</th>
-
+                  <th rowSpan={3} className="border p-2 bg-emerald-700">પત્રક-F</th>
+                  <th rowSpan={3} className="border p-2 bg-amber-600">એક્શન</th>
                   {allPossibleSubjects.map((sub) => (
                     <th key={sub.id} colSpan={8} className="border p-2 text-center bg-indigo-800">{sub.name}</th>
                   ))}
-
                   <th colSpan={2} className="border p-2 bg-amber-700">પત્રક-B (વ્યક્તિત્વ વિકાસ)</th>
                   <th colSpan={4} className="border p-2 bg-emerald-800">વાર્ષિક આખરી પરિણામ</th>
                 </tr>
@@ -819,6 +695,22 @@ export default function HomePage() {
                       <td className="border p-1.5 text-left font-semibold">{st.name}</td>
                       <td className="border p-1.5 text-slate-500">{st.gr_no}</td>
 
+                      {/* Patrak-F Button Direct in Table */}
+                      <td className="border p-1 bg-emerald-50">
+                        <button 
+                          onClick={() => setPrintPatrakF(st)}
+                          className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[10px] shadow"
+                        >
+                          📄 જુઓ
+                        </button>
+                      </td>
+
+                      {/* Edit/Delete Actions */}
+                      <td className="border p-1 bg-slate-50 whitespace-nowrap">
+                        <button onClick={() => handleEditStudent(st)} className="text-amber-600 font-bold mr-1.5">✏️</button>
+                        <button onClick={() => deleteStudent(st.id)} className="text-red-600 font-bold">🗑️</button>
+                      </td>
+
                       {allPossibleSubjects.map((sub) => {
                         const m = st.marks[sub.id] || { sem1_tri: 0, sem1_lek: 0, sem1_swa: 0, sem2_tri: 0, sem2_lek: 0, sem2_swa: 0 };
                         const isHindiSem1 = st.standard === 'ધોરણ ૪' && sub.id === 'hindi';
@@ -861,7 +753,6 @@ export default function HomePage() {
             <h1 className="text-xl font-extrabold uppercase tracking-wide">{schoolName}</h1>
             <p className="text-xs font-bold text-slate-600 mt-0.5">{talukaDist} | શૈક્ષણિક વર્ષ: {academicYear}</p>
             
-            {/* UPDATED TITLE WITHOUT "મૂલ્યાંકન માર્ક્સ ગુણ પત્રક સ્લિપ - " */}
             <div className="mt-2 text-sm font-extrabold bg-indigo-900 text-white py-1 px-4 rounded-md inline-block">
               {selectedStd} ({getExamTitleText()})
             </div>
@@ -933,8 +824,9 @@ export default function HomePage() {
           <div className="bg-white p-6 rounded-3xl max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4 border-b pb-2 print:hidden">
               <h3 className="text-md font-bold text-indigo-900">📄 વાર્ષિક પ્રગતિ પત્રક (પત્રક-એફ)</h3>
-              <button onClick={() => setPrintPatrakF(null)} className="text-red-500 font-bold">✖</button>
+              <button onClick={() => setPrintPatrakF(null)} className="text-red-500 font-bold text-lg">✖</button>
             </div>
+
             <div className="border-2 border-indigo-900 p-5 rounded-2xl text-slate-800">
               <div className="text-center border-b pb-3 mb-3">
                 <h2 className="text-lg font-bold uppercase text-indigo-900">{printPatrakF.school_name}</h2>
@@ -943,15 +835,17 @@ export default function HomePage() {
                   વાર્ષિક પ્રગતિ પત્રક (પત્રક-એફ) - {printPatrakF.academic_year}
                 </div>
               </div>
+
               <div className="grid grid-cols-2 gap-1 text-xs font-semibold mb-3 bg-slate-50 p-2 rounded-xl">
-                <p>નામ: {printPatrakF.name}</p>
-                <p>રોલ નં: {printPatrakF.roll_no}</p>
-                <p>ધોરણ: {printPatrakF.standard}</p>
-                <p>G.R. નં: {printPatrakF.gr_no}</p>
+                <p>નામ: <span className="font-bold">{printPatrakF.name}</span></p>
+                <p>રોલ નં: <span className="font-bold">{printPatrakF.roll_no}</span></p>
+                <p>ધોરણ: <span className="font-bold">{printPatrakF.standard}</span></p>
+                <p>G.R. નં: <span className="font-bold">{printPatrakF.gr_no}</span></p>
               </div>
+
               <table className="w-full border-collapse border text-xs mb-3">
                 <thead>
-                  <tr className="bg-slate-100">
+                  <tr className="bg-slate-100 font-bold">
                     <th className="border p-1 text-left">વિષય</th>
                     <th className="border p-1 text-center">કુલ ગુણ</th>
                     <th className="border p-1 text-center">ગ્રેડ</th>
@@ -971,7 +865,6 @@ export default function HomePage() {
                       </tr>
                     );
                   })}
-                  {/* Patrak-B Row in Patrak-F */}
                   {(() => {
                     const isUpper = ['ધોરણ ૬', 'ધોરણ ૭', 'ધોરણ ૮'].includes(printPatrakF.standard);
                     const sem1Calc = getCalculatedPatrakB(printPatrakF.patrak_b_sem1);
@@ -993,13 +886,15 @@ export default function HomePage() {
                   })()}
                 </tbody>
               </table>
-              <div className="flex justify-between items-center text-xs font-bold pt-2 border-t">
-                <div>વર્ગ શિક્ષકની સહી</div>
-                <div>આચાર્યશ્રીની સહી</div>
+
+              <div className="flex justify-between items-center text-xs font-bold pt-4 mt-2 border-t">
+                <div>વર્ગ શિક્ષકની સહી: _____________</div>
+                <div>આચાર્યશ્રીની સહી: _____________</div>
               </div>
             </div>
-            <button onClick={() => window.print()} className="w-full mt-4 py-2 bg-indigo-600 text-white font-bold rounded-xl shadow print:hidden">
-              🖨️ પ્રિન્ટ કરો
+
+            <button onClick={() => window.print()} className="w-full mt-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow print:hidden">
+              🖨️ પત્રક-F પ્રિન્ટ કરો
             </button>
           </div>
         </div>
